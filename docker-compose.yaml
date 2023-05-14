@@ -29,6 +29,22 @@ services:
     depends_on:
       - matomo_db
 
+  matomo_cron:
+    container_name: matomo_cron
+    image: matomo:fpm
+    depends_on:
+      - matomo_app
+    volumes:
+      - matomo:/var/www/html:rw
+    entrypoint: |
+      bash -c 'bash -s <<EOF
+      trap "break;exit" SIGHUP SIGINT SIGTERM
+      while /bin/true; do
+        su -s "/bin/bash" -c "/usr/local/bin/php /var/www/html/console core:archive" www-data
+        sleep 3600
+      done
+      EOF'
+
   matomo_web:
     container_name: matomo_web
     image: nginx:alpine
